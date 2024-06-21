@@ -10,22 +10,28 @@ else
   if [[ $1 =~ ^[0-9]+$ ]];
   then
   # For Input=Atomic number
-    echo "number"
+    ELEMENT_INFO_RESULT=$($PSQL "SELECT atomic_number,name,symbol,type,atomic_mass,melting_point_celsius,boiling_point_celsius FROM properties FULL JOIN elements USING(atomic_number) LEFT JOIN types USING(type_id) WHERE atomic_number=$1")
   elif [[ $LENGTH_OF_INPUT -gt 0 && $LENGTH_OF_INPUT -le 2 ]];
   then
   # For Input=Element Symbol
-    echo "a symbol"
+    ELEMENT_INFO_RESULT=$($PSQL "SELECT atomic_number,name,symbol,type,atomic_mass,melting_point_celsius,boiling_point_celsius FROM properties FULL JOIN elements USING(atomic_number) LEFT JOIN types USING(type_id) WHERE symbol LIKE '$1'")
   else
   # For Input=Element Name
-    echo "element"
+    ELEMENT_INFO_RESULT=$($PSQL "SELECT atomic_number,name,symbol,type,atomic_mass,melting_point_celsius,boiling_point_celsius FROM properties FULL JOIN elements USING(atomic_number) LEFT JOIN types USING(type_id) WHERE name LIKE '$1'")
   fi
-  # Setting Variables
-  ATOMIC_NUMBER=
-  ELEMENT_NAME=
-  ELEMENT_SYMBOL=
-  ELEMENT_TYPE=
-  ELEMENT_MASS=
-  ELEMENT_MELTING_POINT=
-  ELEMENT_BOILING_POINT=
-  echo "The element with atomic number $ATOMIC_NUMBER is $ELEMENT_NAME ($ELEMENT_SYMBOL). It's a $ELEMENT_TYPE, with a mass of $ELEMENT_MASS amu. $ELEMENT_NAME has a melting point of $ELEMENT_MELTING_POINT celsius and a boiling point of $ELEMENT_BOILING_POINT celsius."
+
+  if [[ -z $ELEMENT_INFO_RESULT ]]
+  then
+    echo "I could not find that element in the database."
+  else
+    # Setting Variables
+    ATOMIC_NUMBER=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f1)
+    ELEMENT_NAME=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f2)
+    ELEMENT_SYMBOL=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f3)
+    ELEMENT_TYPE=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f4)
+    ELEMENT_MASS=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f5)
+    ELEMENT_MELTING_POINT=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f6)
+    ELEMENT_BOILING_POINT=$(echo "$ELEMENT_INFO_RESULT" | cut -d '|' -f7)
+    echo "The element with atomic number $ATOMIC_NUMBER is $ELEMENT_NAME ($ELEMENT_SYMBOL). It's a $ELEMENT_TYPE, with a mass of $ELEMENT_MASS amu. $ELEMENT_NAME has a melting point of $ELEMENT_MELTING_POINT celsius and a boiling point of $ELEMENT_BOILING_POINT celsius."
+  fi
 fi
